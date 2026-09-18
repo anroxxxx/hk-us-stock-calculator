@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>玉山複委託 · 港美股像素交易計算機</title>
+    <style>
+        :root {
+            --bg: #F0ECE4;
+            --card-bg: #FCFAF7;
+            --main-dark: #4A3E3D;
+            --primary: #8C6E63;
+            --primary-hover: #755B51;
+            --accent-pink: #D18D8C;
+            --accent-light: #F7E7E2;
+            --border-color: #4A3E3D;
+            --pixel-shadow: 4px 4px 0px #4A3E3D;
+            --pixel-shadow-sm: 2px 2px 0px #4A3E3D;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--main-dark);
+            font-family: "Courier New", Courier, "PingFang TC", "Microsoft JhengHei", monospace;
+            margin: 0;
+            padding: 20px 10px;
+            display: flex;
+            justify-content: center;
+            background-image: radial-gradient(#D5CDC5 1.5px, transparent 1.5px);
+            background-size: 16px 16px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 680px;
+        }
+
+        .pixel-card {
+            background: var(--card-bg);
+            border: 3px solid var(--border-color);
+            box-shadow: var(--pixel-shadow);
+            padding: 24px;
+            margin-bottom: 24px;
+            position: relative;
+        }
+
+        .header-area {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 2px dashed var(--border-color);
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+        }
+
+        .header-title {
+            font-size: 1.25rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid var(--border-color);
+            background: var(--bg);
+            color: var(--main-dark);
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: var(--pixel-shadow-sm);
+        }
+
+        .tab-btn.active {
+            background: var(--accent-pink);
+            color: white;
+            box-shadow: none;
+            transform: translate(2px, 2px);
+        }
+
+        label {
+            display: block;
+            font-size: 0.95rem;
+            font-weight: bold;
+            margin-bottom: 6px;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px 12px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            border: 2px solid var(--border-color);
+            background: #FFF;
+            color: var(--main-dark);
+            outline: none;
+            margin-bottom: 12px;
+        }
+
+        input:focus {
+            background: var(--accent-light);
+            border-color: var(--primary);
+        }
+
+        .mode-switch {
+            display: flex;
+            gap: 8px;
+            background: #E5DFD7;
+            padding: 4px;
+            border: 2px solid var(--border-color);
+            margin-bottom: 16px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            border: none;
+            padding: 8px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.85rem;
+            background: transparent;
+            font-weight: bold;
+            color: var(--main-dark);
+        }
+
+        .mode-btn.active {
+            background: white;
+            border: 2px solid var(--border-color);
+            box-shadow: var(--pixel-shadow-sm);
+        }
+
+        .batch-item {
+            display: grid;
+            grid-template-columns: 1fr 1fr 38px;
+            gap: 8px;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+
+        .batch-item input {
+            margin-bottom: 0;
+        }
+
+        .btn-del {
+            height: 40px;
+            background: #FFD2D2;
+            border: 2px solid var(--border-color);
+            color: #A33;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: var(--pixel-shadow-sm);
+        }
+
+        .btn-del:active {
+            box-shadow: none;
+            transform: translate(2px, 2px);
+        }
+
+        .btn {
+            width: 100%;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            border: 2px solid var(--border-color);
+        }
+
+        .btn-add {
+            background: var(--accent-light);
+            color: var(--primary);
+            border-style: dashed;
+            padding: 10px;
+            margin: 6px 0 18px;
+        }
+
+        .btn-calc {
+            background: var(--primary);
+            color: white;
+            padding: 14px;
+            box-shadow: var(--pixel-shadow);
+        }
+
+        .btn-calc:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn-calc:active {
+            box-shadow: none;
+            transform: translate(4px, 4px);
+        }
+
+        .results {
+            margin-top: 24px;
+            padding: 16px;
+            background: var(--accent-light);
+            border: 2px solid var(--border-color);
+        }
+
+        .res-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .highlight {
+            font-weight: bold;
+            font-size: 1.25rem;
+        }
+
+        .fee-breakdown {
+            display: flex;
+            justify-content: space-between;
+            background: #FFF;
+            border: 1px dashed var(--border-color);
+            padding: 8px 10px;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+        }
+
+        .fee-breakdown div {
+            text-align: center;
+            flex: 1;
+        }
+
+        .fee-breakdown .fee-label {
+            display: block;
+            opacity: 0.7;
+            margin-bottom: 2px;
+        }
+
+        .fee-breakdown .fee-divider {
+            flex: 0;
+            border-left: 1px dashed var(--border-color);
+            margin: 0 8px;
+        }
+
+        .rate-badge {
+            font-size: 0.8rem;
+            background: #E8E0D7;
+            padding: 8px 10px;
+            border: 1px dashed var(--border-color);
+            margin-bottom: 14px;
+            line-height: 1.5;
+        }
+
+        .history-section {
+            max-height: 360px;
+            overflow-y: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        th, td {
+            padding: 10px 6px;
+            border-bottom: 2px dashed var(--border-color);
+            text-align: left;
+        }
+
+        th {
+            background: #EBE5DC;
+            border-top: 2px solid var(--border-color);
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .pixel-art-couple {
+            width: 44px;
+            height: 44px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="tabs">
+        <button class="tab-btn active" onclick="setMarket('HK')">🇭🇰 港股 (HKD)</button>
+        <button class="tab-btn" onclick="setMarket('US')">🇺🇸 美股 (USD)</button>
+    </div>
+
+    <div class="pixel-card">
+        <div class="header-area">
+            <h2 class="header-title" style="font-size:1.05rem;">[ 💰 資金試算：這筆錢能買幾手 ]</h2>
+        </div>
+
+        <div>
+            <label>目前股價</label>
+            <input type="number" id="capPrice" placeholder="例: 380" step="0.001">
+        </div>
+
+        <div class="batch-item" id="capLotRow" style="grid-template-columns: 1fr 1fr;">
+            <div id="capLotWrap">
+                <label id="capLotLabel">每手股數</label>
+                <input type="number" id="capLotSize" placeholder="例: 100" step="1" value="100" style="margin-bottom:0;">
+            </div>
+            <div>
+                <label>可用資金</label>
+                <input type="number" id="capCapital" placeholder="例: 50000" step="1" style="margin-bottom:0;">
+            </div>
+        </div>
+
+        <button class="btn btn-calc" id="capBtn" onclick="calcCapacity()" style="margin-top:8px;">▶ 試算最多可買幾手</button>
+
+        <div id="capRes" class="results" style="display:none;">
+            <div class="res-row"><span>最多可買</span><span id="capLots" class="highlight" style="color:var(--primary);">-</span></div>
+            <div class="res-row"><span>實際使用資金 (含手續費)</span><span id="capUsed">-</span></div>
+            <div class="res-row"><span>剩餘資金</span><span id="capRemain">-</span></div>
+            <button class="btn btn-add" onclick="applyToBatch()" style="margin-top:8px; margin-bottom:0;">↓ 帶入下方買入批次</button>
+        </div>
+    </div>
+
+    <div class="pixel-card">
+        <div class="header-area">
+            <h2 id="title" class="header-title">[ 港股複委託計算機 ]</h2>
+            <!-- 像素情侶小圖標 -->
+            <svg class="pixel-art-couple" viewBox="0 0 32 32">
+                <!-- 男生 -->
+                <rect x="3" y="4" width="9" height="7" fill="#6A4E42"/>
+                <rect x="4" y="11" width="7" height="6" fill="#FCE5CD"/>
+                <rect x="5" y="13" width="2" height="2" fill="#4A3E3D"/>
+                <rect x="8" y="13" width="2" height="2" fill="#4A3E3D"/>
+                <rect x="3" y="17" width="9" height="8" fill="#D7CEC7"/>
+                <rect x="4" y="25" width="3" height="5" fill="#FAF6F0"/>
+                <rect x="8" y="25" width="3" height="5" fill="#FAF6F0"/>
+                <!-- 女生 -->
+                <rect x="14" y="3" width="11" height="9" fill="#543D37"/>
+                <rect x="16" y="11" width="7" height="6" fill="#FCE5CD"/>
+                <rect x="17" y="13" width="2" height="2" fill="#4A3E3D"/>
+                <rect x="20" y="13" width="2" height="2" fill="#4A3E3D"/>
+                <rect x="15" y="17" width="9" height="5" fill="#D18D8C"/>
+                <rect x="14" y="22" width="11" height="4" fill="#FAF6F0"/>
+                <rect x="16" y="26" width="2" height="4" fill="#FCE5CD"/>
+                <rect x="21" y="26" width="2" height="4" fill="#FCE5CD"/>
+                <!-- 像素心 -->
+                <rect x="12" y="1" width="2" height="2" fill="#D18D8C"/>
+                <rect x="15" y="1" width="2" height="2" fill="#D18D8C"/>
+                <rect x="11" y="3" width="7" height="2" fill="#D18D8C"/>
+                <rect x="13" y="5" width="3" height="2" fill="#D18D8C"/>
+            </svg>
+        </div>
+
+        <div>
+            <label>股票代號 / 備註名稱</label>
+            <input type="text" id="symbol" placeholder="例: 0700 或 NVDA">
+        </div>
+
+        <div id="batchArea">
+            <label>分批買入 (單價 / 股數)</label>
+            <div class="batch-item">
+                <input type="number" class="p-in" placeholder="買入價格" step="0.001">
+                <input type="number" class="s-in" placeholder="股數">
+                <div></div>
+            </div>
+        </div>
+        <button class="btn btn-add" onclick="addBatch()">＋ 新增買入批次</button>
+
+        <div class="mode-switch">
+            <button class="mode-btn active" onclick="setMode('PROFIT')">🎯 設定目標利潤 %</button>
+            <button class="mode-btn" onclick="setMode('PRICE')">🏷️ 設定預期賣出價</button>
+        </div>
+
+        <div>
+            <label id="modeLabel">目標利潤 (%)</label>
+            <input type="number" id="modeValue" value="10" step="0.01">
+        </div>
+
+        <button class="btn btn-calc" onclick="run()">▶ 立即試算損益</button>
+        <div id="res" class="results" style="display:none;">
+            <div class="res-row"><span>平均買入單價</span><span id="resAvg" style="font-weight:bold;">-</span></div>
+            <div class="res-row"><span>買入總成本 (含稅費)</span><span id="resBuyCost">-</span></div>
+            <div class="fee-breakdown">
+                <div><span class="fee-label">買入費用</span><span id="resBuyFees">-</span></div>
+                <div class="fee-divider"></div>
+                <div><span class="fee-label">賣出費用</span><span id="resSellFees">-</span></div>
+                <div class="fee-divider"></div>
+                <div><span class="fee-label">總交易稅費</span><span id="resFees" style="font-weight:bold;">-</span></div>
+            </div>
+            <div class="res-row"><span>保本賣出價</span><span id="resBreak" style="font-weight:bold; color:var(--primary);">-</span></div>
+            <div style="border-top: 1px dashed var(--border-color); margin: 8px 0;"></div>
+            <div class="res-row"><span id="lbl1">預期賣出價</span><span id="val1" class="highlight">-</span></div>
+            <div class="res-row"><span id="lbl2">預估純利金額</span><span id="val2" class="highlight">-</span></div>
+        </div>
+    </div>
+
+    <div class="pixel-card history-section">
+        <h3 style="margin: 0 0 12px 0; font-size: 1rem;">📜 試算紀錄</h3>
+        <table id="hTable">
+            <thead>
+                <tr>
+                    <th>市場</th>
+                    <th>標的</th>
+                    <th>均價成本</th>
+                    <th>賣出價</th>
+                    <th>純利金額</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    let market = 'HK';
+    let mode = 'PROFIT';
+
+    // 港股：印花稅0.10% + SEC交易徵費0.0027% + 交易費0.00565% + 財務匯報局交易徵費0.00015% + 中央結算費用0.0042%
+    // 這五項買賣雙邊都會收取（不含手續費，手續費另計 0.2%／低消40 HKD）
+    const HK_OTHER_RATE = 0.0010 + 0.000027 + 0.0000565 + 0.0000015 + 0.000042;
+
+    // 美股：SEC交易徵費0.00206%，僅「賣出」時收取；買進僅收手續費
+    const US_SEC_RATE = 0.0000206;
+
+    function setMarket(m) {
+        market = m;
+        document.querySelectorAll('.tab-btn').forEach(b => {
+            b.classList.toggle('active', b.innerText.includes(m === 'HK' ? '港股' : '美股'));
+        });
+        document.getElementById('title').innerText = `[ ${m === 'HK' ? '港股' : '美股'}複委託計算機 ]`;
+
+        const isHK = m === 'HK';
+        document.getElementById('capLotWrap').style.display = isHK ? 'block' : 'none';
+        document.getElementById('capLotRow').style.gridTemplateColumns = isHK ? '1fr 1fr' : '1fr';
+        document.getElementById('capBtn').innerText = isHK ? '▶ 試算最多可買幾手' : '▶ 試算最多可買幾股';
+        document.getElementById('capRes').style.display = 'none';
+    }
+
+    function setMode(m) {
+        mode = m;
+        document.querySelectorAll('.mode-btn').forEach(b => {
+            b.classList.toggle('active', b.getAttribute('onclick').includes(m));
+        });
+        document.getElementById('modeLabel').innerText = m === 'PROFIT' ? '目標利潤 (%)' : '預期賣出單價';
+        document.getElementById('modeValue').value = m === 'PROFIT' ? "10" : "";
+    }
+
+    function calcCapacity() {
+        const price = parseFloat(document.getElementById('capPrice').value);
+        const capital = parseFloat(document.getElementById('capCapital').value);
+        const isHK = market === 'HK';
+        const lotSize = isHK ? parseFloat(document.getElementById('capLotSize').value) : 1;
+
+        if (!(price > 0) || !(capital > 0) || (isHK && !(lotSize > 0))) {
+            alert(isHK ? "請輸入有效的股價、每手股數與可用資金！" : "請輸入有效的股價與可用資金！");
+            return;
+        }
+
+        let bestUnits = 0; // HK: 手數；US: 股數
+
+        if (isHK) {
+            // 從一個略偏高的手數開始往下找，找到第一個「含手續費總成本」不超過資金上限的手數
+            let guess = Math.floor(capital / (price * lotSize)) + 5;
+            for (let n = guess; n >= 0; n--) {
+                const principal = n * lotSize * price;
+                const fees = calcBuyFees(principal, market);
+                if (principal + fees <= capital) {
+                    bestUnits = n;
+                    break;
+                }
+            }
+        } else {
+            // 美股無最低手續費，逐股微調找出剛好不超過資金上限的股數
+            let guess = Math.floor(capital / (price * 1.002)) + 5;
+            for (let n = guess; n >= 0; n--) {
+                const principal = n * price;
+                const fees = calcBuyFees(principal, market);
+                if (principal + fees <= capital) {
+                    bestUnits = n;
+                    break;
+                }
+            }
+        }
+
+        const shares = isHK ? bestUnits * lotSize : bestUnits;
+        const principal = shares * price;
+        const fees = calcBuyFees(principal, market);
+        const used = principal + fees;
+        const remain = capital - used;
+        const currSym = isHK ? 'HK$' : '$';
+
+        document.getElementById('capRes').style.display = 'block';
+        document.getElementById('capLots').innerText = isHK
+            ? `${bestUnits} 手 (${shares} 股)`
+            : `${shares} 股`;
+        document.getElementById('capUsed').innerText = `${currSym} ${used.toFixed(2)}`;
+        document.getElementById('capRemain').innerText = `${currSym} ${remain.toFixed(2)}`;
+
+        window._capResult = { price, shares };
+    }
+
+    function applyToBatch() {
+        if (!window._capResult || window._capResult.shares <= 0) return;
+
+        let pIns = document.getElementsByClassName('p-in');
+        let sIns = document.getElementsByClassName('s-in');
+        let idx = -1;
+        for (let i = 0; i < pIns.length; i++) {
+            if (!pIns[i].value && !sIns[i].value) { idx = i; break; }
+        }
+        if (idx === -1) {
+            addBatch();
+            pIns = document.getElementsByClassName('p-in');
+            sIns = document.getElementsByClassName('s-in');
+            idx = pIns.length - 1;
+        }
+        pIns[idx].value = window._capResult.price;
+        sIns[idx].value = window._capResult.shares;
+        document.getElementById('batchArea').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function addBatch() {
+        const div = document.createElement('div');
+        div.className = 'batch-item';
+        div.innerHTML = `
+            <input type="number" class="p-in" placeholder="買入價格" step="0.001">
+            <input type="number" class="s-in" placeholder="股數">
+            <button class="btn-del" onclick="this.parentElement.remove()">×</button>
+        `;
+        document.getElementById('batchArea').appendChild(div);
+    }
+
+    function calcBuyFees(amount, mkt) {
+        if (mkt === 'HK') {
+            const comm = Math.max(40, amount * 0.002);
+            const other = amount * HK_OTHER_RATE;
+            return comm + other;
+        } else {
+            // 美股買進僅收手續費，無其他費用
+            return amount * 0.002;
+        }
+    }
+
+    function calcSellFees(amount, mkt) {
+        if (mkt === 'HK') {
+            const comm = Math.max(40, amount * 0.002);
+            const other = amount * HK_OTHER_RATE;
+            return comm + other;
+        } else {
+            const comm = amount * 0.002;
+            const other = amount * US_SEC_RATE;
+            return comm + other;
+        }
+    }
+
+    function run() {
+        const pIn = document.getElementsByClassName('p-in');
+        const sIn = document.getElementsByClassName('s-in');
+        let totalPrincipal = 0, totalQty = 0;
+
+        for (let i = 0; i < pIn.length; i++) {
+            let p = parseFloat(pIn[i].value), q = parseFloat(sIn[i].value);
+            if (p > 0 && q > 0) {
+                totalPrincipal += (p * q);
+                totalQty += q;
+            }
+        }
+
+        if (totalQty === 0) {
+            alert("請輸入有效的買入價格與股數！");
+            return;
+        }
+
+        const buyFees = calcBuyFees(totalPrincipal, market);
+        const totalCost = totalPrincipal + buyFees;
+        const inputVal = parseFloat(document.getElementById('modeValue').value);
+
+        if (isNaN(inputVal) || inputVal <= 0) {
+            alert("請輸入有效的目標數值！");
+            return;
+        }
+
+        let sellPrice = 0, sellFees = 0, netProfit = 0, profitPct = 0;
+
+        if (mode === 'PROFIT') {
+            const targetPct = inputVal / 100;
+            const targetNetCash = totalCost * (1 + targetPct);
+
+            if (market === 'HK') {
+                let sellAmt = (targetNetCash + 40) / (1 - HK_OTHER_RATE);
+                if (sellAmt * 0.002 > 40) {
+                    sellAmt = targetNetCash / (1 - (0.002 + HK_OTHER_RATE));
+                }
+                sellPrice = sellAmt / totalQty;
+            } else {
+                const usSellTotalRate = 0.002 + US_SEC_RATE;
+                const sellAmt = targetNetCash / (1 - usSellTotalRate);
+                sellPrice = sellAmt / totalQty;
+            }
+
+            sellFees = calcSellFees(sellPrice * totalQty, market);
+            netProfit = (sellPrice * totalQty) - sellFees - totalCost;
+            profitPct = inputVal;
+        } else {
+            sellPrice = inputVal;
+            const sellAmt = sellPrice * totalQty;
+            sellFees = calcSellFees(sellAmt, market);
+            netProfit = sellAmt - sellFees - totalCost;
+            profitPct = (netProfit / totalCost) * 100;
+        }
+
+        let breakevenPrice = 0;
+        if (market === 'HK') {
+            let beAmt = (totalCost + 40) / (1 - HK_OTHER_RATE);
+            if (beAmt * 0.002 > 40) {
+                beAmt = totalCost / (1 - (0.002 + HK_OTHER_RATE));
+            }
+            breakevenPrice = beAmt / totalQty;
+        } else {
+            const usSellTotalRate = 0.002 + US_SEC_RATE;
+            breakevenPrice = (totalCost / (1 - usSellTotalRate)) / totalQty;
+        }
+
+        const currSym = market === 'HK' ? 'HK$' : '$';
+        const totalAllFees = buyFees + sellFees;
+
+        document.getElementById('res').style.display = 'block';
+        const profitColor = netProfit >= 0 ? '#B24C53' : '#4C8C5C';
+
+        document.getElementById('resAvg').innerText = `${currSym} ${(totalPrincipal / totalQty).toFixed(3)}`;
+        document.getElementById('resBuyCost').innerText = `${currSym} ${totalCost.toFixed(2)}`;
+        document.getElementById('resBuyFees').innerText = `${currSym} ${buyFees.toFixed(1)}`;
+        document.getElementById('resSellFees').innerText = `${currSym} ${sellFees.toFixed(1)}`;
+        document.getElementById('resFees').innerText = `${currSym} ${totalAllFees.toFixed(2)}`;
+        document.getElementById('resBreak').innerText = `${currSym} ${breakevenPrice.toFixed(3)}`;
+
+        if (mode === 'PROFIT') {
+            document.getElementById('lbl1').innerText = "預期賣出單價";
+            document.getElementById('val1').innerText = `${currSym} ${sellPrice.toFixed(3)}`;
+            document.getElementById('val1').style.color = 'var(--main-dark)';
+            document.getElementById('lbl2').innerText = "預估純利金額";
+            document.getElementById('val2').innerText = `${currSym} ${netProfit.toFixed(2)}`;
+            document.getElementById('val2').style.color = profitColor;
+        } else {
+            document.getElementById('lbl1').innerText = "預期利潤率 %";
+            document.getElementById('val1').innerText = `${profitPct.toFixed(2)}%`;
+            document.getElementById('val1').style.color = profitColor;
+            document.getElementById('lbl2').innerText = "預估純利金額";
+            document.getElementById('val2').innerText = `${currSym} ${netProfit.toFixed(2)}`;
+            document.getElementById('val2').style.color = profitColor;
+        }
+
+        const tbody = document.getElementById('hTable').querySelector('tbody');
+        const row = tbody.insertRow(0);
+        const name = document.getElementById('symbol').value.trim() || "-";
+        
+        row.innerHTML = `
+            <td><strong>${market}</strong></td>
+            <td>${name}</td>
+            <td>${currSym}${(totalPrincipal / totalQty).toFixed(2)}</td>
+            <td>${currSym}${sellPrice.toFixed(2)}</td>
+            <td style="color:${profitColor}; font-weight:bold;">
+                ${netProfit >= 0 ? '+' : ''}${currSym}${netProfit.toFixed(0)} (${profitPct.toFixed(1)}%)
+            </td>
+        `;
+    }
+</script>
+</body>
+</html>
